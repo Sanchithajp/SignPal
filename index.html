@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Language Chatbot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #0a0f1c;
+      color: #0ff;
+      font-family: 'Poppins', sans-serif;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+    header {
+      text-align: center;
+      padding: 20px;
+    }
+    header h1 {
+      font-weight: 700;
+      font-size: 3em;
+      color: #0ff;
+      text-shadow: 0 0 15px #0ff;
+      margin-bottom: 10px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+    .flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .card {
+      background: #111827;
+      border: 2px solid #0ff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 30px rgba(0,255,255,0.3);
+      flex: 1 1 300px;
+      min-width: 300px;
+    }
+    .video-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    video, canvas {
+      width: 100%;
+      border-radius: 10px;
+      display: block;
+    }
+    video {
+      border: 4px solid #00ff99;
+      box-shadow: 0 0 20px #00ff99;
+    }
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+    .buttons {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    button {
+      padding: 12px 24px;
+      background: linear-gradient(45deg, #00ff99, #0ff);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 10px #0ff;
+    }
+    button:hover {
+      background: linear-gradient(45deg, #0ff, #00ff99);
+      box-shadow: 0 0 20px #00ff99;
+      transform: scale(1.05);
+    }
+    .sign-key {
+      background: transparent;
+      border: 2px solid #0ff;
+      padding: 0;
+      margin: 5px;
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 10px #0ff;
+      position: relative;
+    }
+    .sign-key img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .sign-key span {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(0,0,0,0.5);
+      color: #0ff;
+      font-size: 12px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .sign-key:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 20px #0ff;
+    }
+    #typed-word {
+      font-size: 24px;
+      margin-top: 20px;
+      color: #0ff;
+      text-shadow: 0 0 10px #0ff;
+    }
+    #ai-answer {
+      margin-top: 30px;
+      background: rgba(0, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      color: #0ff;
+      box-shadow: 0 0 20px #0ff;
+    }
+    a {
+      color: #00ff99;
+      text-decoration: none;
+    }
+    a:hover {
+      color: #0ff;
+      text-shadow: 0 0 10px #0ff;
+    }
+    .hidden {
+      display: none;
+    }
+    .auth-form {
+      max-width: 400px;
+      margin: 40px auto;
+      background: #111827;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 30px rgba(0,255,255,0.3);
+      text-align: center;
+    }
+    .auth-form input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px auto;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🖐️ Sign Language Chatbot</h1>
+  </header>
+
+  <div id="auth-container" class="auth-form">
+    <h2>Login</h2>
+    <input type="text" id="login-username" placeholder="Username"><br>
+    <input type="password" id="login-password" placeholder="Password"><br>
+    <button id="login-btn">Login</button>
+    <p>Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
+  </div>
+
+  <div id="signup-container" class="auth-form hidden">
+    <h2>Sign Up</h2>
+    <input type="text" id="signup-username" placeholder="Username"><br>
+    <input type="password" id="signup-password" placeholder="Password"><br>
+    <button id="signup-btn">Sign Up</button>
+    <p>Already have an account? <a href="#" id="show-login">Login</a></p>
+  </div>
+
+  <div class="container hidden" id="main-app">
+    <div class="flex">
+      <div class="card">
+        <div class="video-wrapper">
+          <video id="video" autoplay></video>
+          <canvas id="overlay"></canvas>
+        </div>
+        <div class="buttons">
+          <button id="capture-btn">📸 Capture Frame</button>
+          <button id="logout-btn">Logout</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2 style="color:#00ff99; text-shadow: 0 0 10px #00ff99;">Virtual Keyboard</h2>
+        <div id="keys"></div>
+        <div id="typed-word"></div>
+        <div class="buttons">
+          <button id="clear-btn">Clear</button>
+          <button id="send-btn">Ask AI</button>
+        </div>
+      </div>
+    </div>
+    <div id="ai-answer" style="display:none;"></div>
+  </div>
+
+  <script>
+    const backendBase = "http://127.0.0.1:8000";
+
+    document.getElementById("show-signup").addEventListener("click", () => {
+      document.getElementById("auth-container").classList.add("hidden");
+      document.getElementById("signup-container").classList.remove("hidden");
+    });
+
+    document.getElementById("show-login").addEventListener("click", () => {
+      document.getElementById("signup-container").classList.add("hidden");
+      document.getElementById("auth-container").classList.remove("hidden");
+    });
+
+    document.getElementById("login-btn").addEventListener("click", () => {
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+
+      fetch(`${backendBase}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("auth-container").classList.add("hidden");
+          document.getElementById("main-app").classList.remove("hidden");
+          startApp();
+        } else {
+          alert("Login failed!");
+        }
+      });
+    });
+
+    document.getElementById("signup-btn").addEventListener("click", () => {
+      const username = document.getElementById("signup-username").value;
+      const password = document.getElementById("signup-password").value;
+
+      fetch(`${backendBase}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("Account created. Please login!");
+          document.getElementById("signup-container").classList.add("hidden");
+          document.getElementById("auth-container").classList.remove("hidden");
+        } else {
+          alert("Sign up failed: " + data.detail);
+        }
+      });
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      location.reload();
+    });
+
+    function startApp() {
+      let typedWord = "";
+      const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+      const keysDiv = document.getElementById("keys");
+
+      letters.forEach(letter => {
+        const btn = document.createElement("button");
+        btn.className = "sign-key";
+        const img = document.createElement("img");
+        img.src = `signs/${letter}.jpg`;
+        img.alt = letter;
+        const span = document.createElement("span");
+        span.textContent = letter;
+        btn.appendChild(img);
+        btn.appendChild(span);
+        btn.addEventListener("click", () => {
+          typedWord += letter;
+          updateTypedWord();
+        });
+        keysDiv.appendChild(btn);
+      });
+
+      document.getElementById("clear-btn").addEventListener("click", () => {
+        typedWord = "";
+        updateTypedWord();
+        document.getElementById("ai-answer").style.display = "none";
+      });
+
+      document.getElementById("send-btn").addEventListener("click", () => {
+        if (!typedWord) {
+          alert("Type or capture some letters first!");
+          return;
+        }
+        fetch(`${backendBase}/explain`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ word: typedWord })
+        })
+        .then(res => res.json())
+        .then(data => {
+          let html = `<h3>AI Answer:</h3><p>${data.answer}</p>`;
+          if (data.youtube_link) {
+            html += `<p><a href="${data.youtube_link}" target="_blank">▶️ Watch on YouTube</a></p>`;
+          }
+          document.getElementById("ai-answer").innerHTML = html;
+          document.getElementById("ai-answer").style.display = "block";
+        });
+      });
+
+      const video = document.getElementById("video");
+      const overlay = document.getElementById("overlay");
+      const ctxOverlay = overlay.getContext("2d");
+
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          video.srcObject = stream;
+        });
+
+      function drawROI() {
+        overlay.width = video.videoWidth;
+        overlay.height = video.videoHeight;
+        ctxOverlay.clearRect(0, 0, overlay.width, overlay.height);
+        ctxOverlay.strokeStyle = "#00FF00";
+        ctxOverlay.lineWidth = 3;
+        ctxOverlay.strokeRect(100, 100, 200, 200);
+      }
+      setInterval(drawROI, 100);
+
+      document.getElementById("capture-btn").addEventListener("click", () => {
+        const roiCanvas = document.createElement("canvas");
+        roiCanvas.width = 200;
+        roiCanvas.height = 200;
+        const roiCtx = roiCanvas.getContext("2d");
+        roiCtx.drawImage(video, 100, 100, 200, 200, 0, 0, 200, 200);
+        roiCanvas.toBlob(blob => {
+          const formData = new FormData();
+          formData.append("file", blob, "roi.jpg");
+          fetch(`${backendBase}/predict`, {
+            method: "POST",
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            typedWord += data.letter;
+            updateTypedWord();
+          });
+        }, "image/jpeg");
+      });
+
+      function updateTypedWord() {
+        document.getElementById("typed-word").textContent = typedWord;
+      }
+    }
+  </script>
+</body>
+</html>
